@@ -1,3 +1,6 @@
+/*это типо класс main* создаёт контекст приложения (все бины, сервисы, контроллеры);
+настраивает веб-сервер (обычно Tomcat);
+автоматически поднимает REST API.*/
 package com.deliveryapp.backend;
 
 import org.springframework.boot.SpringApplication;
@@ -7,7 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class DeliveryServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DeliveryServiceApplication.class, args);
+        SpringApplication.run(DeliveryServiceApplication.class, args);
 	}
 
 }
