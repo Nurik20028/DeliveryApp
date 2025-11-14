@@ -8,12 +8,20 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "users")
 public class User {
+    @OneToMany(mappedBy = "user",
+            cascade = CascadeType.ALL, // Каскадное сохранение/удаление
+            orphanRemoval = true,      // Удаление дочерних записей при их отвязке
+            fetch = FetchType.LAZY)
+    private List<Order> orders = new ArrayList<>();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

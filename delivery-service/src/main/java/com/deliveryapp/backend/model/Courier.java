@@ -8,12 +8,22 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.deliveryapp.backend.enums.TransportType;
+import com.deliveryapp.backend.enums.CourierStatus;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "courier")
 public class Courier {
+    @OneToMany(mappedBy = "courier",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.EAGER)
+    private List<Order> orders = new ArrayList<>();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -23,13 +33,14 @@ public class Courier {
     @Column(name = "name", nullable = false, length = Integer.MAX_VALUE)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "transport_type", nullable = false, length = Integer.MAX_VALUE)
-    private String transportType;
+    private TransportType transportType;
 
     @Size(max = 10)
     @Column(name = "transoprt_number", length = 10)
-    private String transoprtNumber;
+    private String transportNumber;
 
     @Column(name = "courier_latitude")
     private Double courierLatitude;
@@ -37,8 +48,9 @@ public class Courier {
     @Column(name = "courier_longitude")
     private Double courierLongitude;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "courier_status", length = Integer.MAX_VALUE)
-    private String courierStatus;
+    private CourierStatus courierStatus;
 
     @ColumnDefault("0")
     @Column(name = "courier_balance", precision = 10, scale = 2)

@@ -1,5 +1,9 @@
 package com.deliveryapp.backend.model;
 
+import com.deliveryapp.backend.enums.OrderStatus;
+import com.deliveryapp.backend.enums.PaymentMethod;
+import com.deliveryapp.backend.enums.TransportType;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,11 +27,17 @@ public class Order {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     @JoinColumn(name = "courier_id")
     private Courier courier;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "transport_type", length = Integer.MAX_VALUE)
-    private String transportType;
+    private TransportType transportType;
 
     @Column(name = "point_a_latitude")
     private Double pointALatitude;
@@ -41,8 +51,9 @@ public class Order {
     @Column(name = "point_b_longitude")
     private Double pointBLongitude;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "order_status", length = Integer.MAX_VALUE)
-    private String orderStatus;
+    private OrderStatus orderStatus;
 
     @ColumnDefault("now()")
     @Column(name = "created_at")
@@ -51,8 +62,9 @@ public class Order {
     @Column(name = "duration")
     private LocalTime duration;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = Integer.MAX_VALUE)
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 
     @Column(name = "payment_amount", precision = 10, scale = 2)
     private BigDecimal paymentAmount;
