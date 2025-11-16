@@ -35,8 +35,8 @@ public class User {
     @Column(name = "users_balance", precision = 10, scale = 2)
     private BigDecimal usersBalance;
 
-    @Size(max = 10)
-    @Column(name = "phone_number", length = 10)
+    @Size(max = 20)
+    @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
     @Size(max = 100)
