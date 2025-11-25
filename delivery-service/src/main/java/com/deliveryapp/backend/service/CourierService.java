@@ -1,11 +1,16 @@
 package com.deliveryapp.backend.service;
 
 import com.deliveryapp.backend.dto.RegistrationRequest;
+import com.deliveryapp.backend.dto.UserLoginRequestDto;
+import com.deliveryapp.backend.dto.UserLoginResponseDto;
+import com.deliveryapp.backend.enums.CourierStatus;
 import com.deliveryapp.backend.model.Courier;
 import com.deliveryapp.backend.enums.TransportType;
 import com.deliveryapp.backend.repository.CourierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import static com.deliveryapp.backend.enums.CourierStatus.OFFLINE;
 
 @Service
 public class CourierService {
@@ -32,6 +37,44 @@ public class CourierService {
         // newCourier.setCourierStatus(CourierStatus.OFFLINE); // Начальный статус
 
         return courierRepository.save(newCourier);
+    }
+
+    public UserLoginResponseDto loginCourier(UserLoginRequestDto request) {
+
+        Courier oldCourier = courierRepository.findByPhoneNumber(request.getPhoneNumber());
+
+        if (oldCourier == null) {
+            return null;
+        }
+
+        // 2. Проверка пароля
+        if (request.getPassword().equals(oldCourier.getPassword())) {
+
+            // 3. Пароли совпали: Преобразуем Entity в Response DTO
+            return convertCourierToDto(oldCourier);
+        }
+
+        return null;
+    }
+
+    // --- ПРИВАТНЫЙ МЕТОД ПРЕОБРАЗОВАНИЯ ДЛЯ КУРЬЕРА ---
+    private UserLoginResponseDto convertCourierToDto(Courier courier) {
+        UserLoginResponseDto dto = new UserLoginResponseDto();
+
+        // Копируем общие поля Курьера в общий DTO ответа
+        dto.setId(Long.valueOf(courier.getId()));
+        dto.setName(courier.getName());
+        dto.setPhoneNumber(courier.getPhoneNumber());
+        dto.setUserType("COURIER");// Явно указываем тип
+
+        dto.setCourierStatus(String.valueOf(CourierStatus.OFFLINE));
+        dto.setTransportType(courier.getTransportType().toString());
+        dto.setTransportNumber(courier.getTransportNumber());
+
+        // Баланс курьера (если есть) или можно оставить null/0
+         dto.setUsersBalance(courier.getCourierBalance());
+
+        return dto;
     }
 
     // ... другие методы (save, login и т.д.)
