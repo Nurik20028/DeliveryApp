@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class UserLoginResponseDto {
+public class UserLoginResponseDto extends LoginResponseBaseDto{
     // Поля, которые клиент должен увидеть
     private Long id; // ID пользователя, необходим для дальнейших запросов
     private String name;
@@ -16,7 +16,9 @@ public class UserLoginResponseDto {
     private String userType; // Чтобы клиент знал, кто вошел
 
     //если зашел курьер
-    private String courierStatus;
-    private String transportType;
-    private String transportNumber;
+//    private String courierStatus;
+//    private String transportType;
+//    private String transportNumber;
+
+    private String accessToken;
 }

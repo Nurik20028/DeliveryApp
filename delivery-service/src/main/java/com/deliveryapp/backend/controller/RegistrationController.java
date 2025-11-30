@@ -1,10 +1,12 @@
 package com.deliveryapp.backend.controller;
 
+import com.deliveryapp.backend.dto.LoginResponseBaseDto;
 import com.deliveryapp.backend.dto.RegistrationRequest;
 import com.deliveryapp.backend.dto.UserLoginRequestDto;
 import com.deliveryapp.backend.dto.UserLoginResponseDto;
 import com.deliveryapp.backend.model.Courier;
 import com.deliveryapp.backend.model.User;
+import com.deliveryapp.backend.security.JwtCore;
 import com.deliveryapp.backend.service.CourierService;
 import com.deliveryapp.backend.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -18,10 +20,12 @@ public class RegistrationController {
 
     private final UserService userService;
     private final CourierService courierService;
+    private final JwtCore jwtCore;
 
-    public RegistrationController(UserService userService, CourierService courierService) {
+    public RegistrationController(UserService userService, CourierService courierService, JwtCore jwtCore) {
         this.userService = userService;
         this.courierService = courierService;
+        this.jwtCore = jwtCore;
     }
 
     // --- ЕДИНАЯ ТОЧКА РЕГИСТРАЦИИ ---
@@ -68,7 +72,7 @@ public class RegistrationController {
 
         String userType = request.getUserType().toUpperCase();
         // loggedInUserDto теперь имеет конкретный тип - DTO ответа
-        UserLoginResponseDto loggedInUserDto = null;
+        LoginResponseBaseDto loggedInUserDto = null;
 
         // 2. ПОДГОТОВКА DTO ЗАПРОСА
         UserLoginRequestDto loginRequestDto = new UserLoginRequestDto();
@@ -90,6 +94,11 @@ public class RegistrationController {
 
         // 4. ЕДИНАЯ ПРОВЕРКА РЕЗУЛЬТАТА
         if (loggedInUserDto != null) {
+            // 1. Генерируем токен на основе телефона
+            String token = jwtCore.generateToken(loggedInUserDto.getPhoneNumber());
+
+            // 2. Кладем токен в ответ
+            loggedInUserDto.setAccessToken(token);
             // Успешный вход: возвращаем DTO и статус 200 OK
             return new ResponseEntity<>(loggedInUserDto, HttpStatus.OK);
         } else {

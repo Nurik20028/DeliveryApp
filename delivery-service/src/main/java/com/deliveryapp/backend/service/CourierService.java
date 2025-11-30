@@ -1,5 +1,6 @@
 package com.deliveryapp.backend.service;
 
+import com.deliveryapp.backend.dto.CourierLoginResponseDto;
 import com.deliveryapp.backend.dto.RegistrationRequest;
 import com.deliveryapp.backend.dto.UserLoginRequestDto;
 import com.deliveryapp.backend.dto.UserLoginResponseDto;
@@ -39,7 +40,7 @@ public class CourierService {
         return courierRepository.save(newCourier);
     }
 
-    public UserLoginResponseDto loginCourier(UserLoginRequestDto request) {
+    public CourierLoginResponseDto loginCourier(UserLoginRequestDto request) {
 
         Courier oldCourier = courierRepository.findByPhoneNumber(request.getPhoneNumber());
 
@@ -58,8 +59,8 @@ public class CourierService {
     }
 
     // --- ПРИВАТНЫЙ МЕТОД ПРЕОБРАЗОВАНИЯ ДЛЯ КУРЬЕРА ---
-    private UserLoginResponseDto convertCourierToDto(Courier courier) {
-        UserLoginResponseDto dto = new UserLoginResponseDto();
+    private CourierLoginResponseDto convertCourierToDto(Courier courier) {
+        CourierLoginResponseDto dto = new CourierLoginResponseDto();
 
         // Копируем общие поля Курьера в общий DTO ответа
         dto.setId(Long.valueOf(courier.getId()));
