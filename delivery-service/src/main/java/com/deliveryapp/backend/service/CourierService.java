@@ -10,16 +10,19 @@ import com.deliveryapp.backend.enums.TransportType;
 import com.deliveryapp.backend.repository.CourierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static com.deliveryapp.backend.enums.CourierStatus.OFFLINE;
 
 @Service
 public class CourierService {
     private final CourierRepository courierRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // --- 2. ДОБАВЬТЕ ЭТОТ КОНСТРУКТОР ---
     @Autowired
-    public CourierService(CourierRepository courierRepository) {
+    public CourierService(CourierRepository courierRepository, PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
         this.courierRepository = courierRepository;
     }
     public Courier registerCourier(RegistrationRequest request) {
@@ -30,12 +33,12 @@ public class CourierService {
         // 1. Копируем общие поля
         newCourier.setName(request.getName());
         newCourier.setPhoneNumber(request.getPhoneNumber());
-        newCourier.setPassword(request.getPassword()); // !!! ВАЖНО: ХЭШИРОВАТЬ !!!
+        newCourier.setPassword(passwordEncoder.encode(request.getPassword())); // !!! ВАЖНО: ХЭШИРОВАТЬ !!!
 
         // 2. Копируем специфичные поля Курьера
         newCourier.setTransportType(request.getTransportType()); // Используйте ваш Enum
         newCourier.setTransportNumber(request.getTransportNumber()); // Исправьте опечатку, если еще не сделали!
-        // newCourier.setCourierStatus(CourierStatus.OFFLINE); // Начальный статус
+        newCourier.setCourierStatus(CourierStatus.OFFLINE); // Начальный статус
 
         return courierRepository.save(newCourier);
     }
@@ -49,7 +52,7 @@ public class CourierService {
         }
 
         // 2. Проверка пароля
-        if (request.getPassword().equals(oldCourier.getPassword())) {
+        if (passwordEncoder.matches(request.getPassword(), oldCourier.getPassword())) {
 
             // 3. Пароли совпали: Преобразуем Entity в Response DTO
             return convertCourierToDto(oldCourier);
