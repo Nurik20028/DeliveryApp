@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@react-google-maps/api": "^2.20.7",
+    "leaflet": "^1.9.4",
+    "leaflet-routing-machine": "^3.2.12",
+    "react-leaflet": "^5.0.0",
+    "sockjs-client": "^1.6.1"
+  }
+}

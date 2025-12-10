@@ -1,55 +1,56 @@
 package com.deliveryapp.backend.config;
 
 import com.deliveryapp.backend.security.TokenFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final TokenFilter tokenFilter;
 
-    public SecurityConfig(TokenFilter tokenFilter) {
-        this.tokenFilter = tokenFilter;
-    }
-
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Отключаем защиту CSRF (она не нужна для REST API)
-                .csrf(AbstractHttpConfigurer::disable)
-                // Разрешаем CORS (чтобы фронтенд мог слать запросы)
-                .cors(httpSecurityCorsConfigurer ->
-                        httpSecurityCorsConfigurer.configurationSource(request ->
-                                new CorsConfiguration().applyPermitDefaultValues()
-                        )
+                .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // Если пользователь не вошел - возвращаем 401
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/ws/**", "/app/**", "/topic/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                // Не сохраняем сессию на сервере (Stateless)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                // ПРАВИЛА ДОСТУПА
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/**").permitAll() // <-- Вход и регистрация доступны ВСЕМ
-                        .anyRequest().authenticated() // <-- Все остальное - только с токеном
-                )
-                // Добавляем наш фильтр перед стандартным фильтром
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

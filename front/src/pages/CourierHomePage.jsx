@@ -3,13 +3,16 @@ import axios from "axios";
 
 export default function CourierHomePage({ user }) {
     const [waitingOrders, setWaitingOrders] = useState([]);
+    const [isActive, setIsActive] = useState(true);
 
     const token = localStorage.getItem("token");
 
     useEffect(() => {
-        loadWaitingOrders();
+        if (isActive) {
+            loadWaitingOrders();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [isActive]);
 
     const loadWaitingOrders = async () => {
         try {
@@ -21,7 +24,6 @@ export default function CourierHomePage({ user }) {
                     },
                 }
             );
-
             setWaitingOrders(response.data);
         } catch (error) {
             console.error("Ошибка загрузки заказов:", error);
@@ -47,13 +49,11 @@ export default function CourierHomePage({ user }) {
         }
     };
 
-    // остальной код без изменений...
-
-
-const containerStyle = {
+    // ---- Стили ----
+    const containerStyle = {
         minHeight: "100vh",
         background: "linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)",
-        padding: "40px 20px"
+        padding: "40px 20px",
     };
 
     const cardStyle = {
@@ -62,7 +62,7 @@ const containerStyle = {
         padding: "40px",
         maxWidth: "900px",
         margin: "0 auto",
-        boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)"
+        boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
     };
 
     const headerStyle = {
@@ -70,13 +70,13 @@ const containerStyle = {
         color: "#333",
         marginTop: 0,
         marginBottom: "8px",
-        fontWeight: "700"
+        fontWeight: "700",
     };
 
     const infoStyle = {
         fontSize: "16px",
         color: "#777",
-        marginBottom: "10px"
+        marginBottom: "10px",
     };
 
     const sectionTitleStyle = {
@@ -86,7 +86,7 @@ const containerStyle = {
         marginBottom: "20px",
         fontWeight: "600",
         paddingBottom: "10px",
-        borderBottom: "2px solid #e0e0e0"
+        borderBottom: "2px solid #e0e0e0",
     };
 
     const orderItemStyle = {
@@ -95,7 +95,6 @@ const containerStyle = {
         borderRadius: "12px",
         marginBottom: "15px",
         border: "2px solid #e0e0e0",
-        transition: "all 0.3s"
     };
 
     const buttonStyle = {
@@ -107,20 +106,36 @@ const containerStyle = {
         border: "none",
         borderRadius: "8px",
         cursor: "pointer",
-        transition: "transform 0.2s, box-shadow 0.2s",
-        boxShadow: "0 4px 15px rgba(86, 171, 47, 0.4)",
-        marginTop: "12px"
+        marginTop: "12px",
     };
 
     const emptyStateStyle = {
         textAlign: "center",
         padding: "40px",
         color: "#999",
-        fontSize: "16px"
+        fontSize: "16px",
     };
 
     return (
         <div style={containerStyle}>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
+                <button
+                    onClick={() => setIsActive(!isActive)}
+                    style={{
+                        padding: "12px 24px",
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        background: isActive ? "#4CAF50" : "#d9534f",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "10px",
+                        cursor: "pointer",
+                    }}
+                >
+                    {isActive ? "Принимать заказы" : "Не принимать"}
+                </button>
+            </div>
+
             <div style={cardStyle}>
                 <h2 style={headerStyle}>Курьер: {user.name}</h2>
                 <p style={infoStyle}>Телефон: {user.phoneNumber}</p>
@@ -128,52 +143,31 @@ const containerStyle = {
 
                 <h3 style={sectionTitleStyle}>Заказы, ожидающие курьера</h3>
 
-                {waitingOrders.length === 0 ? (
-                    <div style={emptyStateStyle}>
-                        <p>Нет доступных заказов</p>
-                    </div>
+                {!isActive ? (
+                    <div style={emptyStateStyle}>Режим приёма заказов выключен</div>
+                ) : waitingOrders.length === 0 ? (
+                    <div style={emptyStateStyle}>Нет доступных заказов</div>
                 ) : (
-                    <div>
-                        {waitingOrders.map((order) => (
-                            <div
-                                key={order.id}
-                                style={orderItemStyle}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = "#56ab2f";
-                                    e.currentTarget.style.transform = "translateY(-2px)";
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = "#e0e0e0";
-                                    e.currentTarget.style.transform = "translateY(0)";
-                                }}
-                            >
-                                <strong style={{ fontSize: "18px", color: "#333" }}>
-                                    Заказ #{order.id}
-                                </strong>
-                                <p style={{ margin: "8px 0", color: "#666", fontSize: "15px" }}>
-                                    Точка A: ({order.pointALatitude}, {order.pointALongitude})
-                                </p>
-                                <p style={{ margin: "8px 0", color: "#666", fontSize: "15px" }}>
-                                    Точка B: ({order.pointBLatitude}, {order.pointBLongitude})
-                                </p>
+                    waitingOrders.map((order) => (
+                        <div key={order.id} style={orderItemStyle}>
+                            <strong style={{ fontSize: "18px", color: "#333" }}>
+                                Заказ #{order.id}
+                            </strong>
+                            <p>
+                                Точка A: ({order.pointALatitude}, {order.pointALongitude})
+                            </p>
+                            <p>
+                                Точка B: ({order.pointBLatitude}, {order.pointBLongitude})
+                            </p>
 
-                                <button
-                                    onClick={() => acceptOrder(order.id)}
-                                    style={buttonStyle}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.transform = "translateY(-2px)";
-                                        e.target.style.boxShadow = "0 6px 20px rgba(86, 171, 47, 0.6)";
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.transform = "translateY(0)";
-                                        e.target.style.boxShadow = "0 4px 15px rgba(86, 171, 47, 0.4)";
-                                    }}
-                                >
-                                    Принять заказ
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                            <button
+                                onClick={() => acceptOrder(order.id)}
+                                style={buttonStyle}
+                            >
+                                Принять заказ
+                            </button>
+                        </div>
+                    ))
                 )}
             </div>
         </div>

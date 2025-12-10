@@ -21,8 +21,8 @@ export default function LoginPage({ onSwitchToRegister, onLogin }) {
 
             // сохраняем токен
             localStorage.setItem("token", data.accessToken);
-            localStorage.setItem("userType", data.userType);
-            localStorage.setItem("userId", data.id);
+            localStorage.setItem("user", JSON.stringify(data))
+
 
             alert("Вход выполнен!");
 

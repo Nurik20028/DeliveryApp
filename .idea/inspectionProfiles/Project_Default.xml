@@ -2,6 +2,7 @@
   <profile version="1.0">
     <option name="myName" value="Project Default" />
     <inspection_tool class="Annotator" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="BadExpressionStatementJS" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="DuplicatedCode" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="ES6ClassMemberInitializationOrder" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="ES6DestructuringVariablesMerge" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
@@ -16,6 +17,7 @@
     <inspection_tool class="JSCheckFunctionSignatures" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="JSClosureCompilerSyntax" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="JSCommentMatchesSignature" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="JSConstantReassignment" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="JSDeprecatedSymbols" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="JSDuplicatedDeclaration" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="JSFileReferences" enabled="false" level="WARNING" enabled_by_default="false" />
@@ -27,6 +29,7 @@
       <option name="queries" value="trace,write,forEach,length,size" />
       <option name="updates" value="pop,push,shift,splice,unshift,add,insert,remove,reverse,copyWithin,fill,sort" />
     </inspection_tool>
+    <inspection_tool class="JSOctalInteger" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="JSPrimitiveTypeWrapperUsage" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="JSReferencingMutableVariableFromClosure" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="JSUndeclaredVariable" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
@@ -51,6 +54,8 @@
       <option name="REPORT_ANNOTATION_NOT_PROPAGATED_TO_OVERRIDERS" value="true" />
       <option name="REPORT_NULLS_PASSED_TO_NON_ANNOTATED_METHOD" value="true" />
     </inspection_tool>
+    <inspection_tool class="ReservedWordUsedAsNameJS" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="ThisExpressionReferencesGlobalObjectJS" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="WebpackConfigHighlighting" enabled="false" level="WARNING" enabled_by_default="false" />
   </profile>
 </component>

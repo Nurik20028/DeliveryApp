@@ -1,40 +1,76 @@
 import React, { useState, useEffect } from "react";
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route,
+    useNavigate,
+} from "react-router-dom";
+
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import UserHomePage from "./pages/UserHomePage";
 import CourierHomePage from "./pages/CourierHomePage";
+import CreateOrderPage from "./pages/CreateOrderPage";
 
 export default function App() {
-    const [page, setPage] = useState("register"); // register | login | home
-    const [user, setUser] = useState(null);
+    return (
+        <Router>
+            <MainApp />
+        </Router>
+    );
+}
 
-    // Проверяем токен при загрузке
+// function MainApp() {
+//     const [user, setUser] = useState(null);
+//     const navigate = useNavigate();
+//
+//     // При первой загрузке пробуем восстановить юзера
+//     useEffect(() => {
+//         const savedUser = localStorage.getItem("user");
+//         const token = localStorage.getItem("token");
+//
+//         if (savedUser && token) {
+//             setUser(JSON.parse(savedUser));
+//             navigate("/home");
+//         } else {
+//             navigate("/register");
+//         }
+//     }, [navigate]);
+function MainApp() {
+    const [user, setUser] = useState(null);
+    const [initialized, setInitialized] = useState(false);
+    const navigate = useNavigate();
+
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
         const token = localStorage.getItem("token");
 
         if (savedUser && token) {
             setUser(JSON.parse(savedUser));
-            setPage("home");
+            navigate("/home");
         }
-    }, []);
 
-    // Когда успешно вошёл — сохраняем всё
+        setInitialized(true);
+    }, []); // ← важное изменение: пустой массив
+
+    if (!initialized) {
+        return null; // или загрузочный экран
+    }
+
+
     const handleLoginSuccess = (data) => {
+        alert("Токен: " + data.accessToken);
         localStorage.setItem("token", data.accessToken);
         localStorage.setItem("user", JSON.stringify(data));
 
         setUser(data);
-        setPage("home");
+        navigate("/home");
     };
 
-    // Выход
     const logout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-
+        localStorage.clear();
         setUser(null);
-        setPage("register");
+        navigate("/login");
     };
 
     const logoutButtonStyle = {
@@ -46,54 +82,90 @@ export default function App() {
         fontWeight: "600",
         color: "white",
         background: "rgba(255, 87, 87, 0.9)",
-        backdropFilter: "blur(10px)",
-        border: "2px solid rgba(255, 255, 255, 0.3)",
+        border: "none",
         borderRadius: "25px",
         cursor: "pointer",
-        transition: "all 0.3s",
+        boxShadow: "0 4px 15px rgba(255, 87, 87, 0.4)",
         zIndex: 1000,
-        boxShadow: "0 4px 15px rgba(255, 87, 87, 0.4)"
     };
 
     return (
         <div>
-            {/* ---------- REGISTER ---------- */}
-            {page === "register" && (
-                <RegisterPage onSwitchToLogin={() => setPage("login")} />
+            {user && (
+                <button
+                    style={logoutButtonStyle}
+                    onClick={logout}
+                    onMouseEnter={(e) => {
+                        e.target.style.background = "rgba(255, 87, 87, 1)";
+                        e.target.style.transform = "translateY(-2px)";
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.background = "rgba(255, 87, 87, 0.9)";
+                        e.target.style.transform = "translateY(0)";
+                    }}
+                >
+                    Выйти
+                </button>
             )}
 
-            {/* ---------- LOGIN ---------- */}
-            {page === "login" && (
-                <LoginPage
-                    onSwitchToRegister={() => setPage("register")}
-                    onLogin={handleLoginSuccess}
+            <Routes>
+                <Route
+                    path="/register"
+                    element={
+                        <RegisterPage onSwitchToLogin={() => navigate("/login")} />
+                    }
                 />
-            )}
 
-            {/* ---------- HOME ---------- */}
-            {page === "home" && user && (
-                <div>
-                    <button
-                        style={logoutButtonStyle}
-                        onClick={logout}
-                        onMouseEnter={(e) => {
-                            e.target.style.background = "rgba(255, 87, 87, 1)";
-                            e.target.style.transform = "translateY(-2px)";
-                            e.target.style.boxShadow = "0 6px 20px rgba(255, 87, 87, 0.6)";
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.background = "rgba(255, 87, 87, 0.9)";
-                            e.target.style.transform = "translateY(0)";
-                            e.target.style.boxShadow = "0 4px 15px rgba(255, 87, 87, 0.4)";
-                        }}
-                    >
-                        Выйти
-                    </button>
+                <Route
+                    path="/login"
+                    element={
+                        <LoginPage
+                            onSwitchToRegister={() => navigate("/register")}
+                            onLogin={handleLoginSuccess}
+                        />
+                    }
+                />
 
-                    {user.userType === "USER" && <UserHomePage user={user} />}
-                    {user.userType === "COURIER" && <CourierHomePage user={user} />}
-                </div>
-            )}
+                <Route
+                    path="/home"
+                    element={
+                        user ? (
+                            user.userType === "USER" ? (
+                                <UserHomePage user={user} />
+                            ) : (
+                                <CourierHomePage user={user} />
+                            )
+                        ) : (
+                            <LoginPage
+                                onSwitchToRegister={() => navigate("/register")}
+                                onLogin={handleLoginSuccess}
+                            />
+                        )
+                    }
+                />
+
+                <Route
+                    path="/create-order"
+                    element={
+                        user ? (
+                            <CreateOrderPage user={user} />
+                        ) : (
+                            <LoginPage
+                                onSwitchToRegister={() => navigate("/register")}
+                                onLogin={handleLoginSuccess}
+                            />
+                        )
+                    }
+                />
+
+                {/* редирект по умолчанию */}
+                <Route
+                    path="*"
+                    element={
+                        <RegisterPage onSwitchToLogin={() => navigate("/login")} />
+                    }
+                />
+            </Routes>
         </div>
     );
 }
