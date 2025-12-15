@@ -7,35 +7,46 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtCore {
 
-    // Срок действия токена (например, 24 часа в миллисекундах)
-    private final long EXPIRATION_TIME = 86400000;
+    private final Key key;
+    private final long expiration;
 
-    // Секретный ключ для подписи (должен быть сложным!)
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    public JwtCore(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration}") long expiration
+    ) {
+        // Один и тот же ключ при каждом запуске — токены не ломаются
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expiration = expiration;
+    }
 
-    // 1. Генерация токена
+    // Генерация токена
     public String generateToken(String phoneNumber) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+
         return Jwts.builder()
-                .setSubject(phoneNumber) // Зашиваем номер телефона в токен
-                .setIssuedAt(new Date()) // Когда создан
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // Когда протухнет
-                .signWith(key) // Подписываем нашим секретным ключом
+                .setSubject(phoneNumber)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // 2. Валидация токена и извлечение имени (телефона)
+    // Вытаскиваем телефон из токена
     public String getNameFromJwt(String token) {
-        return Jwts.parserBuilder()
+        Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
+
+        return claims.getSubject();
     }
 }

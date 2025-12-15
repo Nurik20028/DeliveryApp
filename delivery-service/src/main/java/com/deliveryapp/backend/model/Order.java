@@ -4,6 +4,7 @@ import com.deliveryapp.backend.enums.OrderStatus;
 import com.deliveryapp.backend.enums.PaymentMethod;
 import com.deliveryapp.backend.enums.TransportType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,15 +26,16 @@ public class Order {
     @Column(name = "id", nullable = false)
     private Integer id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
     @JoinColumn(name = "user_id")
     private User user;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
     @JoinColumn(name = "courier_id")
     private Courier courier;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transport_type", length = Integer.MAX_VALUE)

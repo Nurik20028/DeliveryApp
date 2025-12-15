@@ -1,5 +1,6 @@
 package com.deliveryapp.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -20,6 +21,7 @@ public class User {
             cascade = CascadeType.ALL, // Каскадное сохранение/удаление
             orphanRemoval = true,      // Удаление дочерних записей при их отвязке
             fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Order> orders = new ArrayList<>();
 
     @Id
