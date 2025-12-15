@@ -22,23 +22,34 @@ public class TokenFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         String jwt = null;
         String phoneNumber = null;
         String headerAuth = request.getHeader("Authorization");
 
+        // DEBUG: Логируем что пришло
+        System.out.println("=== TokenFilter DEBUG ===");
+        System.out.println("URL: " + request.getRequestURI());
+        System.out.println("Authorization header: "
+                + (headerAuth != null ? headerAuth.substring(0, Math.min(50, headerAuth.length())) + "..." : "NULL"));
+
         // Проверяем заголовок: "Authorization: Bearer <token>"
         if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
             jwt = headerAuth.substring(7); // Убираем "Bearer "
+            System.out.println("JWT extracted, length: " + jwt.length());
+        } else {
+            System.out.println("No Bearer token found in header!");
         }
 
         // Если токен есть, проверяем его
         if (jwt != null) {
             try {
                 phoneNumber = jwtCore.getNameFromJwt(jwt);
+                System.out.println("Token valid! Phone: " + phoneNumber);
             } catch (Exception e) {
                 // Токен невалиден (истек или подделан)
-                System.out.println("Ошибка валидации JWT");
+                System.out.println("Ошибка валидации JWT: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             }
 
             // Если все ок и пользователь еще не в системе
@@ -48,12 +59,13 @@ public class TokenFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         phoneNumber,
                         null,
-                        Collections.emptyList()
-                );
+                        Collections.emptyList());
                 // Пропускаем пользователя
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                System.out.println("Authentication set successfully!");
             }
         }
+        System.out.println("=========================");
 
         // Передаем запрос дальше (в контроллер)
         filterChain.doFilter(request, response);
