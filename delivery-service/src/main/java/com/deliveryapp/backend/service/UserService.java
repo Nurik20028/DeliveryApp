@@ -7,15 +7,18 @@ import com.deliveryapp.backend.model.User;
 import com.deliveryapp.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // - от сюда скопировал
@@ -26,7 +29,7 @@ public class UserService {
         // 1. Копируем общие поля
         newUser.setName(request.getName());
         newUser.setPhoneNumber(request.getPhoneNumber());
-        newUser.setPassword(request.getPassword()); // !!! ВАЖНО: ХЭШИРОВАТЬ !!!
+        newUser.setPassword(passwordEncoder.encode(request.getPassword())); // !!! ВАЖНО: ХЭШИРОВАТЬ !!!
 
         // 2. Устанавливаем баланс по умолчанию (если нужно)
         newUser.setUsersBalance(BigDecimal.ZERO);
@@ -47,7 +50,9 @@ public class UserService {
 
         // 3. Проверка пароля (Используем .equals() для сравнения строк!)
         // ВАЖНО: В реальном проекте здесь должно быть сравнение хешей!
-        if (request.getPassword().equals(oldUser.getPassword())) {
+        // 1-й аргумент: пароль, который ввел пользователь (request.getPassword())
+        // 2-й аргумент: хеш, который лежит в БД (oldUser.getPassword())
+        if (passwordEncoder.matches(request.getPassword(), oldUser.getPassword())) {
 
             // 4. Пароли совпали: Преобразуем Entity в Response DTO
             return convertToDto(oldUser);
