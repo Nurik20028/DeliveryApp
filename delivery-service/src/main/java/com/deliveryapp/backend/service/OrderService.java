@@ -4,6 +4,7 @@ import com.deliveryapp.backend.dto.ordersDTO.OrderRegistrationRequest;
 import com.deliveryapp.backend.dto.ordersDTO.OrderResponseDto;
 import com.deliveryapp.backend.enums.OrderStatus;
 import com.deliveryapp.backend.enums.TransportType;
+import com.deliveryapp.backend.model.Courier;
 import com.deliveryapp.backend.model.Order;
 import com.deliveryapp.backend.model.User;
 import com.deliveryapp.backend.repository.CourierRepository;
@@ -126,5 +127,20 @@ public class OrderService {
 
         // Устанавливаем масштаб (два знака после запятой)
         return amount.setScale(2, BigDecimal.ROUND_HALF_UP);
+    }
+
+    // функция связывает заказ с курьером (срабатывает когда курьер примет заказ)
+    public Order acceptOrder(Integer orderId, Integer courierId) {
+
+        Courier courier = courierRepository.findById(courierId)
+                .orElseThrow(() -> new RuntimeException("Courier not found"));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setCourier(courier);
+        order.setOrderStatus(OrderStatus.WAITING);
+
+        return orderRepository.save(order);
     }
 }

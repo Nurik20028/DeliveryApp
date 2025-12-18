@@ -14,6 +14,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -46,7 +51,9 @@ public class SecurityConfig {
                 )
                 // ПРАВИЛА ДОСТУПА
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/**").permitAll() // <-- Вход и регистрация доступны ВСЕМ
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/ws/**", "/app/**", "/topic/**").permitAll() // <-- Вход и регистрация доступны ВСЕМ
+                        .requestMatchers("/*.html", "/css/**", "/js/**", "/static/**").permitAll()
                         .anyRequest().authenticated() // <-- Все остальное - только с токеном
                 )
                 // Добавляем наш фильтр перед стандартным фильтром
@@ -59,5 +66,22 @@ public class SecurityConfig {
         // Создаем экземпляр кодировщика BCrypt.
         // Это стандарт индустрии. Он специально медленный, чтобы хакеры не могли быстро перебирать пароли.
         return new BCryptPasswordEncoder();
+    }
+    //(ИСПРАВЛЕНИЕ CORS)
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // ВМЕСТО .setAllowedOrigins(Arrays.asList("*"));
+        // ИСПОЛЬЗУЙТЕ Patterns:
+        configuration.setAllowedOriginPatterns(List.of("*")); // <-- Разрешает всем, но безопасно
+
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true); // <-- Это то, из-за чего была ошибка
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

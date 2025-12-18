@@ -36,12 +36,12 @@ public class JwtCore {
     }
 
     // 2. Валидация токена и извлечение имени (телефона)
-    public String getNameFromJwt(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
-    }
+        public String getNameFromJwt(String token) {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        }
 }

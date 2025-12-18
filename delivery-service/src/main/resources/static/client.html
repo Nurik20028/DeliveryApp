@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Я - Клиент (Заказчик)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .box {
+            border: 2px solid #333;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        #log {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📱 Я - Клиент (жду заказ)</h1>
+    <div class="box">
+        <h3>Где мой курьер (ID 26)?</h3>
+        <p id="status">Статус: Ожидание...</p>
+        <p id="coords">Координаты: -</p>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        var stompClient = null;
+
+        // Подключаемся сразу при открытии страницы
+        function connect() {
+            var socket = new SockJS('/ws'); // Подключаемся к тому же серверу
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function (frame) {
+                document.getElementById("status").innerText = "Статус: Подключено! Слушаю эфир...";
+
+                // 👇 САМОЕ ВАЖНОЕ: Подписка на топик курьера 26
+                stompClient.subscribe('/topic/courier/26', function (message) {
+
+                    // Когда приходит сообщение, мы попадаем сюда
+                    var body = JSON.parse(message.body);
+                    showLocation(body);
+                });
+            });
+        }
+
+        function showLocation(data) {
+            console.log("Пришло:", data);
+            document.getElementById("coords").innerText =
+                "Lat: " + data.latitude.toFixed(5) + ", Lon: " + data.longitude.toFixed(5);
+
+            // Мигание для эффекта
+            var log = document.getElementById("log");
+            log.innerText = "⚡ Обновлено: " + new Date().toLocaleTimeString();
+        }
+
+        connect(); // Запуск
+    </script>
+</body>
+
+</html>

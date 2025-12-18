@@ -11,7 +11,7 @@ import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/order")
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 public class OrderCreatingController {
     private final OrderService orderService;
 

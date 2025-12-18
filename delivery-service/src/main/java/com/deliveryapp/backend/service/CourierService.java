@@ -71,7 +71,7 @@ public class CourierService {
         dto.setPhoneNumber(courier.getPhoneNumber());
         dto.setUserType("COURIER");// Явно указываем тип
 
-        dto.setCourierStatus(String.valueOf(CourierStatus.OFFLINE));
+        dto.setCourierStatus(String.valueOf(CourierStatus.ONLINE));
         dto.setTransportType(courier.getTransportType().toString());
         dto.setTransportNumber(courier.getTransportNumber());
 

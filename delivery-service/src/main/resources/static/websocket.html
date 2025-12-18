@@ -1,0 +1,77 @@
+<html>
+<head>
+    <title>Тест Курьера</title>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<h2>Симулятор Курьера (Авто)</h2>
+
+<div id="status">Статус: Отключено</div>
+<div id="coords">Последние координаты: -</div>
+
+<button onclick="connect()">1. Подключиться</button>
+<button onclick="startAutoTracking()">2. Начать движение (Каждые 3 сек)</button>
+<button onclick="stopTracking()">3. Стоп</button>
+
+<script>
+    var stompClient = null;
+    var intervalId = null; // Тут храним таймер
+
+    function connect() {
+        // Используем относительный путь для универсальности (и localhost, и ngrok)
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            document.getElementById("status").innerText = "Статус: Подключено!";
+            console.log('Connected: ' + frame);
+        });
+    }
+
+    function startAutoTracking() {
+        if (!stompClient || !stompClient.connected) {
+            alert("Сначала нажмите Подключиться!");
+            return;
+        }
+
+        if (intervalId) return; // Защита от двойного нажатия
+
+        document.getElementById("status").innerText = "Статус: ЕДЕМ! (Отправка каждые 3 сек)";
+
+        // ЗАПУСК ТАЙМЕРА
+        intervalId = setInterval(function() {
+            sendRandomLocation();
+        }, 3000); // 3000 миллисекунд = 3 секунды
+    }
+
+    function stopTracking() {
+        if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+            document.getElementById("status").innerText = "Статус: Остановка.";
+        }
+    }
+
+    function sendRandomLocation() {
+        // Генерируем небольшое смещение, чтобы курьер "двигался"
+        var randomLat = 42.87 + (Math.random() * 0.01);
+        var randomLon = 74.60 + (Math.random() * 0.01);
+
+        var locationData = {
+            courierId: 26, // ID курьера
+            latitude: randomLat,
+            longitude: randomLon
+        };
+
+        stompClient.send("/app/courier/location", {}, JSON.stringify(locationData));
+
+        // Обновляем текст на экране
+        document.getElementById("coords").innerText =
+            "Отправлено: " + randomLat.toFixed(4) + ", " + randomLon.toFixed(4);
+        console.log("Отправлено:", locationData);
+    }
+</script>
+</body>
+</html>
