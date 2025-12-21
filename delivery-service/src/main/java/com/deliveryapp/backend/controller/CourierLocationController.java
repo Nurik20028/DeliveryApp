@@ -21,5 +21,7 @@ public class CourierLocationController {
         System.out.println("ПРИШЛО НА СЕРВЕР: Курьер " + location.getCourierId() + " "+ location.getLongitude() + "  "+ location.getLatitude());
 
         messagingTemplate.convertAndSend("/topic/courier/" + location.getCourierId(), location);
+
+        System.out.println("ОТПРАВИЛ В /topic/courier/26");
     }
 }

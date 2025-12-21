@@ -14,10 +14,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -33,52 +31,47 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Отключаем защиту CSRF (она не нужна для REST API)
                 .csrf(AbstractHttpConfigurer::disable)
-                // Разрешаем CORS (чтобы фронтенд мог слать запросы)
-                .cors(httpSecurityCorsConfigurer ->
-                        httpSecurityCorsConfigurer.configurationSource(request ->
-                                new CorsConfiguration().applyPermitDefaultValues()
-                        )
-                )
-                // Если пользователь не вошел - возвращаем 401
+                // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+                // Мы говорим Spring Security: "Используй настройки из бина corsConfigurationSource()"
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // -------------------------
+
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
-                // Не сохраняем сессию на сервере (Stateless)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // ПРАВИЛА ДОСТУПА
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/ws/**", "/app/**", "/topic/**").permitAll() // <-- Вход и регистрация доступны ВСЕМ
+                        // Разрешаем сокеты
+                        .requestMatchers("/ws/**", "/ws/info", "/ws/**").permitAll()
                         .requestMatchers("/*.html", "/css/**", "/js/**", "/static/**").permitAll()
-                        .anyRequest().authenticated() // <-- Все остальное - только с токеном
+                        .anyRequest().authenticated()
                 )
-                // Добавляем наш фильтр перед стандартным фильтром
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Создаем экземпляр кодировщика BCrypt.
-        // Это стандарт индустрии. Он специально медленный, чтобы хакеры не могли быстро перебирать пароли.
         return new BCryptPasswordEncoder();
     }
-    //(ИСПРАВЛЕНИЕ CORS)
+
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // ВМЕСТО .setAllowedOrigins(Arrays.asList("*"));
-        // ИСПОЛЬЗУЙТЕ Patterns:
-        configuration.setAllowedOriginPatterns(List.of("*")); // <-- Разрешает всем, но безопасно
+        // Разрешаем все источники (в том числе Ngrok)
+        configuration.setAllowedOriginPatterns(List.of("*"));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true); // <-- Это то, из-за чего была ошибка
+
+        // ВАЖНО: Разрешаем передачу авторизационных данных (нужно для сокетов)
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

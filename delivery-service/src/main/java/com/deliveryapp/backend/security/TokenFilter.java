@@ -31,43 +31,44 @@ public class TokenFilter extends OncePerRequestFilter {
         // DEBUG: Логируем что пришло
         System.out.println("=== TokenFilter DEBUG ===");
         System.out.println("URL: " + request.getRequestURI());
-        System.out.println("Authorization header: "
-                + (headerAuth != null ? headerAuth.substring(0, Math.min(50, headerAuth.length())) + "..." : "NULL"));
 
-        // Проверяем заголовок: "Authorization: Bearer <token>"
+        // 1. ПРОВЕРКА ЗАГОЛОВКА (для обычных REST запросов)
         if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
-            jwt = headerAuth.substring(7); // Убираем "Bearer "
-            System.out.println("JWT extracted, length: " + jwt.length());
-        } else {
-            System.out.println("No Bearer token found in header!");
+            jwt = headerAuth.substring(7);
+            System.out.println("JWT extracted from Header");
+        }
+        // 2. НОВАЯ ПРОВЕРКА: Ищем токен в URL (для WebSocket)
+        // Сработает, если заголовка нет, но в ссылке есть ?token=...
+        else {
+            String paramToken = request.getParameter("token");
+            if (paramToken != null) {
+                jwt = paramToken;
+                System.out.println("JWT extracted from URL parameter");
+            } else {
+                System.out.println("No Token found in Header or URL!");
+            }
         }
 
-        // Если токен есть, проверяем его
+        // 3. ОБЩАЯ ВАЛИДАЦИЯ (код ниже остался прежним)
         if (jwt != null) {
             try {
                 phoneNumber = jwtCore.getNameFromJwt(jwt);
                 System.out.println("Token valid! Phone: " + phoneNumber);
             } catch (Exception e) {
-                // Токен невалиден (истек или подделан)
-                System.out.println("Ошибка валидации JWT: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                System.out.println("Ошибка валидации JWT: " + e.getClass().getSimpleName());
             }
 
-            // Если все ок и пользователь еще не в системе
             if (phoneNumber != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Создаем "пропуск" для Spring Security
-                // (Пока без ролей, просто пустой список authorities)
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         phoneNumber,
                         null,
                         Collections.emptyList());
-                // Пропускаем пользователя
                 SecurityContextHolder.getContext().setAuthentication(auth);
                 System.out.println("Authentication set successfully!");
             }
         }
         System.out.println("=========================");
 
-        // Передаем запрос дальше (в контроллер)
         filterChain.doFilter(request, response);
     }
 }
